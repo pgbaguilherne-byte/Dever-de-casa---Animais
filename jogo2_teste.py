@@ -50,15 +50,32 @@ obstaculos = [criar_obstaculo()]
 obstaculo_img = pygame.image.load("estrela.png").convert_alpha()
 obstaculo_img = pygame.transform.scale(obstaculo_img, (larg_obstaculo, alt_obstaculo))
 
+    # --- CARREGAR IMAGEM DO FUNDO ---
+fundo = pygame.image.load("fundo_noite.png").convert()
+fundo = pygame.transform.scale(fundo, (LARGURA, ALTURA))
+
 # --- PONTUAÇÃO E FONTE ---
 pontuacao = 0
 fonte = pygame.font.SysFont("arial", 24)
 
 rodando = True
 game_over = False
+larg_fundo = 800
+i = 0
 
 while rodando:
     clock.tick(60)
+
+    pygame.mixer.music.load("musica_natal.mp3")
+
+    tela.blit(fundo, (i,0))
+    tela.blit(fundo, (larg_fundo + i,0))
+    
+    if i == -larg_fundo:
+        tela.blit(fundo, (larg_fundo+i,0))
+        i = 0
+    
+    i -= 3 
 
     # --- EVENTOS ---
     for evento in pygame.event.get():
@@ -80,16 +97,6 @@ while rodando:
             y_jogador += vel_jogador
         if teclas[pygame.K_UP] or teclas[pygame.K_w]:
             y_jogador -= vel_jogador
-        if teclas[pygame.K_LEFT] or teclas[pygame.K_a]:
-            x_jogador -= vel_jogador
-        if teclas[pygame.K_RIGHT] or teclas[pygame.K_d]:
-            x_jogador += vel_jogador
-
-        # limitar jogador na tela (horizontais)
-        if x_jogador < 0:
-            x_jogador = 0
-        if x_jogador > LARGURA - larg_jogador:
-            x_jogador = LARGURA - larg_jogador
 
         # limitar vertical conforme pedido (topo até 2/3 da tela)
         if y_jogador < limite_topo:
@@ -120,34 +127,6 @@ while rodando:
             if rect_jogador.colliderect(rect_obst):
                 game_over = True
                 break
-
-    # --- DESENHO ---
-    tela.fill(PRETO)
-
-    # --- CARREGAR IMAGEM DO FUNDO ---
-    fundo = pygame.image.load("fundo_noite.png").convert()
-    fundo = pygame.transform.scale(fundo, (LARGURA, ALTURA))
-
-    # Posições iniciais dos dois fundos (efeito de loop infinito)
-    fundo_x1 = 0
-    fundo_x2 = LARGURA
-
-    vel_fundo = 2   # velocidade do efeito de voo
-
-        # --- MOVIMENTO DO FUNDO ---
-    fundo_x1 -= vel_fundo
-    fundo_x2 -= vel_fundo
-
-    # Quando sair da tela, reinicia
-    if fundo_x1 <= -LARGURA:
-        fundo_x1 = LARGURA
-
-    if fundo_x2 <= -LARGURA:
-        fundo_x2 = LARGURA
-
-    # --- DESENHA OS FUNDOS ---
-    tela.blit(fundo, (fundo_x1, 0))
-    tela.blit(fundo, (fundo_x2, 0))
 
 
     tela.blit(jogador_img, (x_jogador, y_jogador))
