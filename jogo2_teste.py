@@ -61,21 +61,24 @@ fonte = pygame.font.SysFont("arial", 24)
 rodando = True
 game_over = False
 larg_fundo = 800
+
+pygame.mixer.music.load("musica_natal.mp3")
+pygame.mixer.music.play(-1)
+
 i = 0
+vel_fundo = 3
 
 while rodando:
     clock.tick(60)
 
-    pygame.mixer.music.load("musica_natal.mp3")
+    # --- FUNDO COM SCROLL INFINITO ---
+    tela.blit(fundo, (i, 0))                # fundo principal
+    tela.blit(fundo, (i + LARGURA, 0))      # segundo fundo ao lado
 
-    tela.blit(fundo, (i,0))
-    tela.blit(fundo, (larg_fundo + i,0))
-    
-    if i == -larg_fundo:
-        tela.blit(fundo, (larg_fundo+i,0))
+    i -= vel_fundo
+    if i <= -LARGURA:
         i = 0
-    
-    i -= 3 
+
 
     # --- EVENTOS ---
     for evento in pygame.event.get():
