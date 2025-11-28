@@ -50,6 +50,25 @@ obstaculos = [criar_obstaculo()]
 obstaculo_img = pygame.image.load("estrela.png").convert_alpha()
 obstaculo_img = pygame.transform.scale(obstaculo_img, (larg_obstaculo, alt_obstaculo))
 
+
+# --- INIMIGOS ---
+larg_inimigo = 80
+alt_inimigo = 80
+
+def criar_inimigo():
+    # surge à direita, entre LARGURA e LARGURA+200
+    x = random.randint(LARGURA, LARGURA + 200)
+    # faixa vertical entre 0 e 250 (ou altere conforme quiser)
+    y = random.randint(350, 400)
+    return [x, y]
+
+inimigos = [criar_inimigo()]
+
+# --- CARREGAR IMAGEM DOS INIMIGOS ---
+inimigo_img = pygame.image.load("grinch.png").convert_alpha()
+inimigo_img = pygame.transform.scale(inimigo_img, (larg_inimigo, alt_inimigo))
+
+
     # --- CARREGAR IMAGEM DO FUNDO ---
 fundo = pygame.image.load("fundo_noite.png").convert()
 fundo = pygame.transform.scale(fundo, (LARGURA, ALTURA))
@@ -61,7 +80,7 @@ fonte = pygame.font.SysFont("arial", 24)
 rodando = True
 game_over = False
 larg_fundo = 800
-game_win = False 
+game_win = False
 
 pygame.mixer.music.load("musica_natal.mp3")
 pygame.mixer.music.play(-1)
@@ -85,34 +104,18 @@ while rodando:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             rodando = False
-        if game_over and evento.type == pygame.KEYDOWN:
+        if (game_over or game_win) and evento.type == pygame.KEYDOWN:
             if evento.key == pygame.K_SPACE:
                 # reiniciar
-                game_win = False
                 game_over = False
+                game_win = False
                 pontuacao = 0
                 x_jogador = 50
                 y_jogador = ALTURA // 2 - alt_jogador // 2
                 obstaculos = [criar_obstaculo()]
-        if game_win and evento.type == pygame.KEYDOWN:
-            if evento.key == pygame.K_SPACE:
-                # reiniciar
-                game_win = False
-                game_over = False
-                pontuacao = 0
-                x_jogador = 50
-                y_jogador = ALTURA // 2 - alt_jogador // 2
-                obstaculos = [criar_obstaculo()]
+                inimigos = [criar_inimigo()]
 
-    if not game_over:
-        # --- MOVIMENTO DO JOGADOR (captura por frame) ---
-        teclas = pygame.key.get_pressed()
-        if teclas[pygame.K_DOWN] or teclas[pygame.K_s]:
-            y_jogador += vel_jogador
-        if teclas[pygame.K_UP] or teclas[pygame.K_w]:
-            y_jogador -= vel_jogador
-
-    if not game_win:
+    if not game_over and not game_win:
         # --- MOVIMENTO DO JOGADOR (captura por frame) ---
         teclas = pygame.key.get_pressed()
         if teclas[pygame.K_DOWN] or teclas[pygame.K_s]:
@@ -142,7 +145,17 @@ while rodando:
                 obst[1] = random.randint(0, 250)
                 pontuacao += 1
 
-        # --- COLISÃO ---
+        # --- MOVER inimigos (da direita para a esquerda) ---
+        vel_inimigo = 4
+        for inim in inimigos:
+            inim[0] -= vel_inimigo  # x -= velocidade (vai para a esquerda)
+
+            # se saiu totalmente pela esquerda, reposiciona à direita e soma ponto
+            if inim[0] < -larg_inimigo:
+                inim[0] = random.randint(LARGURA, LARGURA + 200)
+                inim[1] = random.randint(350, 400)
+
+        # --- COLISÃO OBSTACULOS---
         rect_jogador = pygame.Rect(x_jogador, y_jogador, larg_jogador, alt_jogador)
         for obst in obstaculos:
             rect_obst = pygame.Rect(obst[0], obst[1], larg_obstaculo, alt_obstaculo)
@@ -150,15 +163,26 @@ while rodando:
                 game_over = True
                 break
 
-        # --- VITORIA ---
-        if pontuacao > 32:
+
+        # --- COLISÃO INIMIGOS---
+        rect_jogador = pygame.Rect(x_jogador, y_jogador, larg_jogador, alt_jogador)
+        for inim in inimigos:
+            rect_inim = pygame.Rect(inim[0], inim[1], larg_inimigo, alt_inimigo)
+            if rect_jogador.colliderect(rect_inim):
+                game_over = True
+                break
+        
+        if pontuacao == 50:
             game_win = True
-            break
+
 
     tela.blit(jogador_img, (x_jogador, y_jogador))
 
     for obst in obstaculos:
         tela.blit(obstaculo_img, (obst[0], obst[1]))
+    
+    for inim in inimigos:
+        tela.blit(inimigo_img, (inim[0], inim[1]))
 
     # pontuação
     texto_pontos = fonte.render(f"Pontuação: {pontuacao}", True, BRANCO)
@@ -167,11 +191,10 @@ while rodando:
     if game_over:
         texto_go = fonte.render("GAME OVER! Aperte ESPAÇO para reiniciar.", True, BRANCO)
         tela.blit(texto_go, (150, ALTURA // 2))
-
+        
     if game_win:
-        texto_go = fonte.render("Você venceu! Aperte ESPAÇO para reiniciar.", True, BRANCO)
+        texto_go = fonte.render("O NATAL FOI SALVO! Aperte ESPAÇO para reiniciar.", True, BRANCO)
         tela.blit(texto_go, (150, ALTURA // 2))
-
 
     pygame.display.update()
 
